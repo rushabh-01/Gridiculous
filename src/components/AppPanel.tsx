@@ -49,6 +49,8 @@ export const AppPanel = ({
 
   const handleRemove = () => {
     if (app?.isLocalFile) {
+      document.exitFullscreen?.();
+      setIsFullscreen(!isFullscreen);
       setShowDeleteConfirm(true);
     } else {
       if (!isFullscreen) {
