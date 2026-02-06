@@ -51,7 +51,13 @@ export const AppPanel = ({
     if (app?.isLocalFile) {
       setShowDeleteConfirm(true);
     } else {
+      if (!isFullscreen) {
       onRemoveApp();
+    } else {
+      document.exitFullscreen?.();
+      setIsFullscreen(!isFullscreen);
+      onRemoveApp();
+    }
     }
   };
 
