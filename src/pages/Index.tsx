@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { LayoutManager } from "@/components/LayoutManager";
 import { AddItemDialog } from "@/components/AddItemDialog";
 import { WorkspaceGrid } from "@/components/WorkspaceGrid";
 import { MobilePanelView } from "@/components/MobilePanelView";
+import { OnboardingTour } from "@/components/OnboardingTour";
 import { useLayouts } from "@/hooks/useLayouts";
 import { useLayoutSharing } from "@/hooks/useLayoutSharing";
+import { useLayoutHistory } from "@/hooks/useLayoutHistory";
+import { useOnboarding } from "@/hooks/useOnboarding";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { AppInstance } from "@/types/layout";
+import { AppInstance, Layout } from "@/types/layout";
 
 const Index = () => {
   const [isNavbarOpen, setIsNavbarOpen] = useState(true);
@@ -27,6 +30,37 @@ const Index = () => {
 
   // Handle incoming shared layouts from URL
   useLayoutSharing(addLayout, setActiveLayout);
+
+  // Undo/Redo history
+  const {
+    pushToHistory,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    syncLayout,
+  } = useLayoutHistory(activeLayout, updateLayout);
+
+  // Sync layout when it changes externally (e.g., layout switch)
+  useEffect(() => {
+    syncLayout(activeLayout);
+  }, [activeLayout?.id, syncLayout]);
+
+  // Onboarding tour
+  const {
+    isOnboardingActive,
+    currentStep,
+    currentStepData,
+    totalSteps,
+    startOnboarding,
+    nextStep,
+    prevStep,
+    skipOnboarding,
+  } = useOnboarding();
+
+  const handleUpdateLayout = (layout: Layout) => {
+    pushToHistory(layout);
+  };
 
   const handleAddApp = (
     name: string, 
@@ -59,7 +93,7 @@ const Index = () => {
       p.id === targetPanel.id ? { ...p, app: newApp } : p
     );
 
-    updateLayout({ ...activeLayout, panels: updatedPanels });
+    handleUpdateLayout({ ...activeLayout, panels: updatedPanels });
     setSelectedPanelId(null);
   };
 
@@ -77,6 +111,11 @@ const Index = () => {
         onToggle={() => setIsNavbarOpen(!isNavbarOpen)}
         onOpenLayoutManager={() => setIsLayoutManagerOpen(true)}
         onOpenAppInserter={() => setIsAppInserterOpen(true)}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={undo}
+        onRedo={redo}
+        onStartTour={startOnboarding}
       />
 
       <main
@@ -87,13 +126,13 @@ const Index = () => {
         {isMobile && activeLayout ? (
           <MobilePanelView 
             layout={activeLayout}
-            onUpdateLayout={updateLayout}
+            onUpdateLayout={handleUpdateLayout}
             onOpenAppInserter={handleOpenAppInserter}
           />
         ) : (
           <WorkspaceGrid 
             layout={activeLayout} 
-            onUpdateLayout={updateLayout}
+            onUpdateLayout={handleUpdateLayout}
             onOpenAppInserter={handleOpenAppInserter}
           />
         )}
@@ -116,6 +155,17 @@ const Index = () => {
           setSelectedPanelId(null);
         }}
         onAddApp={handleAddApp}
+      />
+
+      {/* Onboarding Tour */}
+      <OnboardingTour
+        isActive={isOnboardingActive}
+        currentStep={currentStepData}
+        stepNumber={currentStep}
+        totalSteps={totalSteps}
+        onNext={nextStep}
+        onPrev={prevStep}
+        onSkip={skipOnboarding}
       />
     </div>
   );

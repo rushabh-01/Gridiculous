@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { DraggablePanel } from "./DraggablePanel";
 import { AppPanel } from "./AppPanel";
+import { FileDropZone } from "./FileDropZone";
 import { Layout, AppInstance, PanelSettings } from "@/types/layout";
 
 interface WorkspaceGridProps {
@@ -42,6 +42,13 @@ export const WorkspaceGrid = ({ layout, onUpdateLayout, onOpenAppInserter }: Wor
     onUpdateLayout({ ...layout, panels: updatedPanels });
   };
 
+  const handleNoteChange = (panelId: string, note: string) => {
+    const updatedPanels = layout.panels.map((p) =>
+      p.id === panelId ? { ...p, note } : p
+    );
+    onUpdateLayout({ ...layout, panels: updatedPanels });
+  };
+
   const handleSwapPanels = (sourcePanelId: string, targetPanelId: string) => {
     const sourcePanel = layout.panels.find(p => p.id === sourcePanelId);
     const targetPanel = layout.panels.find(p => p.id === targetPanelId);
@@ -50,10 +57,10 @@ export const WorkspaceGrid = ({ layout, onUpdateLayout, onOpenAppInserter }: Wor
     
     const updatedPanels = layout.panels.map((p) => {
       if (p.id === sourcePanelId) {
-        return { ...p, app: targetPanel.app, settings: targetPanel.settings };
+        return { ...p, app: targetPanel.app, settings: targetPanel.settings, note: targetPanel.note };
       }
       if (p.id === targetPanelId) {
-        return { ...p, app: sourcePanel.app, settings: sourcePanel.settings };
+        return { ...p, app: sourcePanel.app, settings: sourcePanel.settings, note: sourcePanel.note };
       }
       return p;
     });
@@ -61,20 +68,45 @@ export const WorkspaceGrid = ({ layout, onUpdateLayout, onOpenAppInserter }: Wor
     onUpdateLayout({ ...layout, panels: updatedPanels });
   };
 
+  const handleFileDrop = (panelId: string, name: string, url: string, isLocalFile: boolean, fileData: string, fileType: string) => {
+    const newApp: AppInstance = {
+      id: `app-${Date.now()}`,
+      name,
+      url,
+      isLocalFile,
+      fileData,
+      fileType,
+    };
+
+    const updatedPanels = layout.panels.map((p) =>
+      p.id === panelId ? { ...p, app: newApp } : p
+    );
+    onUpdateLayout({ ...layout, panels: updatedPanels });
+  };
+
   const renderAppPanel = (panel: typeof layout.panels[0]) => (
-    <DraggablePanel
-      panelId={panel.id}
-      onSwap={handleSwapPanels}
+    <FileDropZone
+      onFileDropped={(name, url, isLocalFile, fileData, fileType) => 
+        handleFileDrop(panel.id, name, url, isLocalFile, fileData, fileType)
+      }
+      isEmpty={!panel.app}
     >
-      <AppPanel
-        app={panel.app}
-        settings={panel.settings || DEFAULT_SETTINGS}
-        onSettingsChange={(settings) => handleSettingsChange(panel.id, settings)}
-        onRemoveApp={() => handleRemoveApp(panel.id)}
-        onAddApp={() => onOpenAppInserter(panel.id)}
-        onEditApp={() => onOpenAppInserter(panel.id)}
-      />
-    </DraggablePanel>
+      <DraggablePanel
+        panelId={panel.id}
+        onSwap={handleSwapPanels}
+      >
+        <AppPanel
+          app={panel.app}
+          settings={panel.settings || DEFAULT_SETTINGS}
+          note={panel.note || ""}
+          onSettingsChange={(settings) => handleSettingsChange(panel.id, settings)}
+          onNoteChange={(note) => handleNoteChange(panel.id, note)}
+          onRemoveApp={() => handleRemoveApp(panel.id)}
+          onAddApp={() => onOpenAppInserter(panel.id)}
+          onEditApp={() => onOpenAppInserter(panel.id)}
+        />
+      </DraggablePanel>
+    </FileDropZone>
   );
 
   const gridConfig = layout.gridConfig;

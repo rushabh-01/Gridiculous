@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { X, Maximize2, GripVertical } from "lucide-react";
+import { useState, useCallback } from "react";
+import { X, Maximize2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Layout, AppInstance, PanelSettings, VIEW_MODE_DIMENSIONS } from "@/types/layout";
 import { PanelControls } from "./PanelControls";
+import { PanelNotes } from "./PanelNotes";
 
 interface MobilePanelViewProps {
   layout: Layout;
@@ -21,6 +22,7 @@ export const MobilePanelView = ({
   onOpenAppInserter 
 }: MobilePanelViewProps) => {
   const [expandedPanelId, setExpandedPanelId] = useState<string | null>(null);
+  const [iframeKey, setIframeKey] = useState(0);
 
   const handleRemoveApp = (panelId: string) => {
     const updatedPanels = layout.panels.map((p) =>
@@ -36,6 +38,17 @@ export const MobilePanelView = ({
     );
     onUpdateLayout({ ...layout, panels: updatedPanels });
   };
+
+  const handleNoteChange = (panelId: string, note: string) => {
+    const updatedPanels = layout.panels.map((p) =>
+      p.id === panelId ? { ...p, note } : p
+    );
+    onUpdateLayout({ ...layout, panels: updatedPanels });
+  };
+
+  const handleRefresh = useCallback(() => {
+    setIframeKey((prev) => prev + 1);
+  }, []);
 
   const getContentStyle = (settings: PanelSettings) => {
     const { viewMode, zoom } = settings;
@@ -112,6 +125,7 @@ export const MobilePanelView = ({
 
     return (
       <iframe
+        key={iframeKey}
         src={app.url}
         className="border-0 w-full h-full"
         style={getContentStyle(settings)}
@@ -153,6 +167,13 @@ export const MobilePanelView = ({
                   isFullscreen={false}
                   onToggleFullscreen={() => {}}
                   appUrl={!expandedPanel.app.isLocalFile ? expandedPanel.app.url : undefined}
+                  onRefresh={handleRefresh}
+                  isLocalFile={expandedPanel.app.isLocalFile}
+                />
+                <PanelNotes
+                  panelId={expandedPanel.id}
+                  note={expandedPanel.note || ""}
+                  onNoteChange={(note) => handleNoteChange(expandedPanel.id, note)}
                 />
                 <Button
                   variant="ghost"

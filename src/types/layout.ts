@@ -19,6 +19,7 @@ export interface LayoutPanel {
   id: string;
   app: AppInstance | null;
   settings?: PanelSettings;
+  note?: string; // Sticky note for the panel
 }
 
 export interface Layout {

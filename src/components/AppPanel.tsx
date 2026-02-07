@@ -1,8 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { X, GripVertical, AlertCircle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppInstance, PanelSettings, VIEW_MODE_DIMENSIONS } from "@/types/layout";
 import { PanelControls } from "./PanelControls";
+import { PanelNotes } from "./PanelNotes";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +18,9 @@ import {
 interface AppPanelProps {
   app: AppInstance | null;
   settings: PanelSettings;
+  note: string;
   onSettingsChange: (settings: PanelSettings) => void;
+  onNoteChange: (note: string) => void;
   onRemoveApp: () => void;
   onDragStart?: (e: React.DragEvent) => void;
   onDragOver?: (e: React.DragEvent) => void;
@@ -34,7 +37,9 @@ const DEFAULT_SETTINGS: PanelSettings = {
 export const AppPanel = ({ 
   app, 
   settings = DEFAULT_SETTINGS,
+  note = "",
   onSettingsChange,
+  onNoteChange,
   onRemoveApp, 
   onDragStart, 
   onDragOver, 
@@ -45,6 +50,7 @@ export const AppPanel = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [iframeError, setIframeError] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const handleRemove = () => {
@@ -76,6 +82,11 @@ export const AppPanel = ({
     }
     setIsFullscreen(!isFullscreen);
   };
+
+  const handleRefresh = useCallback(() => {
+    setIframeKey((prev) => prev + 1);
+    setIframeError(false);
+  }, []);
 
   const getContentStyle = () => {
     const { viewMode, zoom } = settings;
@@ -174,6 +185,7 @@ export const AppPanel = ({
           </div>
         )}
         <iframe
+          key={iframeKey}
           src={app.url}
           className="border-0"
           style={getContentStyle()}
@@ -194,7 +206,7 @@ export const AppPanel = ({
         onDrop={onDrop}
         onClick={onAddApp}
       >
-        <p className="text-xs text-muted-foreground">Click to add an app or file</p>
+        <p className="text-xs text-muted-foreground">Click to add an app or drop a file</p>
       </div>
     );
   }
@@ -234,6 +246,14 @@ export const AppPanel = ({
               isFullscreen={isFullscreen}
               onToggleFullscreen={toggleFullscreen}
               appUrl={!app.isLocalFile ? app.url : undefined}
+              onRefresh={handleRefresh}
+              isLocalFile={app.isLocalFile}
+            />
+            
+            <PanelNotes
+              panelId={app.id}
+              note={note}
+              onNoteChange={onNoteChange}
             />
             
             <Button

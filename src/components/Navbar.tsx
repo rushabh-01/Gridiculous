@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { LayoutGrid, Plus, X, Keyboard, Command } from "lucide-react";
+import { LayoutGrid, Plus, X, Keyboard, Command, Undo2, Redo2, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -8,9 +8,24 @@ interface NavbarProps {
   onToggle: () => void;
   onOpenLayoutManager: () => void;
   onOpenAppInserter: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  onStartTour?: () => void;
 }
 
-export const Navbar = ({ isOpen, onToggle, onOpenLayoutManager, onOpenAppInserter }: NavbarProps) => {
+export const Navbar = ({ 
+  isOpen, 
+  onToggle, 
+  onOpenLayoutManager, 
+  onOpenAppInserter,
+  canUndo = false,
+  canRedo = false,
+  onUndo,
+  onRedo,
+  onStartTour,
+}: NavbarProps) => {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -29,11 +44,21 @@ export const Navbar = ({ isOpen, onToggle, onOpenLayoutManager, onOpenAppInserte
         e.preventDefault();
         onToggle();
       }
+      // Ctrl/Cmd + Z = Undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        onUndo?.();
+      }
+      // Ctrl/Cmd + Shift + Z = Redo
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
+        e.preventDefault();
+        onRedo?.();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onOpenLayoutManager, onOpenAppInserter, onToggle]);
+  }, [onOpenLayoutManager, onOpenAppInserter, onToggle, onUndo, onRedo]);
 
   return (
     <>
@@ -68,6 +93,43 @@ export const Navbar = ({ isOpen, onToggle, onOpenLayoutManager, onOpenAppInserte
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
+          {/* Undo/Redo */}
+          <div className="flex items-center border-r border-white/10 pr-2 mr-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onUndo}
+                  disabled={!canUndo}
+                  className="h-8 w-8"
+                >
+                  <Undo2 className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Undo <kbd className="ml-2 text-[10px] opacity-60">⌘Z</kbd>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onRedo}
+                  disabled={!canRedo}
+                  className="h-8 w-8"
+                >
+                  <Redo2 className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Redo <kbd className="ml-2 text-[10px] opacity-60">⌘⇧Z</kbd>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -75,6 +137,7 @@ export const Navbar = ({ isOpen, onToggle, onOpenLayoutManager, onOpenAppInserte
                 size="sm"
                 onClick={onOpenLayoutManager}
                 className="glass-hover h-8 text-xs gap-1.5"
+                data-tour="layouts-btn"
               >
                 <LayoutGrid className="h-3.5 w-3.5" />
                 Layouts
@@ -92,6 +155,7 @@ export const Navbar = ({ isOpen, onToggle, onOpenLayoutManager, onOpenAppInserte
                 size="sm"
                 onClick={onOpenAppInserter}
                 className="glass-hover h-8 text-xs gap-1.5"
+                data-tour="add-btn"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Add
@@ -102,6 +166,21 @@ export const Navbar = ({ isOpen, onToggle, onOpenLayoutManager, onOpenAppInserte
             </TooltipContent>
           </Tooltip>
 
+          {/* Help / Tour */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onStartTour}
+                className="glass-hover h-8 w-8"
+              >
+                <HelpCircle className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Take a tour</TooltipContent>
+          </Tooltip>
+
           {/* Keyboard shortcuts hint */}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -109,6 +188,7 @@ export const Navbar = ({ isOpen, onToggle, onOpenLayoutManager, onOpenAppInserte
                 variant="ghost"
                 size="icon"
                 className="glass-hover h-8 w-8"
+                data-tour="shortcuts-btn"
               >
                 <Keyboard className="h-3.5 w-3.5" />
               </Button>
@@ -127,6 +207,14 @@ export const Navbar = ({ isOpen, onToggle, onOpenLayoutManager, onOpenAppInserte
                 <div className="flex justify-between gap-4">
                   <span>Manage layouts</span>
                   <kbd className="opacity-60">⌘L</kbd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span>Undo</span>
+                  <kbd className="opacity-60">⌘Z</kbd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span>Redo</span>
+                  <kbd className="opacity-60">⌘⇧Z</kbd>
                 </div>
               </div>
             </TooltipContent>

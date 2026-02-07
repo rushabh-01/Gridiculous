@@ -1,4 +1,4 @@
-import { Monitor, Tablet, Smartphone, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, ExternalLink } from "lucide-react";
+import { Monitor, Tablet, Smartphone, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, ExternalLink, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ViewMode, VIEW_MODE_DIMENSIONS, PanelSettings } from "@/types/layout";
@@ -9,6 +9,8 @@ interface PanelControlsProps {
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   appUrl?: string;
+  onRefresh?: () => void;
+  isLocalFile?: boolean;
 }
 
 export const PanelControls = ({
@@ -17,6 +19,8 @@ export const PanelControls = ({
   isFullscreen,
   onToggleFullscreen,
   appUrl,
+  onRefresh,
+  isLocalFile,
 }: PanelControlsProps) => {
   const handleViewModeChange = (mode: ViewMode) => {
     onSettingsChange({ ...settings, viewMode: mode });
@@ -135,6 +139,23 @@ export const PanelControls = ({
           <TooltipContent>Reset Zoom</TooltipContent>
         </Tooltip>
       </div>
+
+      {/* Refresh Button - for web apps only */}
+      {onRefresh && !isLocalFile && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onRefresh}
+              className="h-5 w-5"
+            >
+              <RefreshCw className="h-3 w-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Refresh</TooltipContent>
+        </Tooltip>
+      )}
 
       {/* Fullscreen & External */}
       <Tooltip>
