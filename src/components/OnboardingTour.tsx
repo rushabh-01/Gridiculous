@@ -37,11 +37,11 @@ export const OnboardingTour = ({
 
           let top = 0;
           let left = 0;
-
+          
           switch (currentStep.position) {
             case "bottom":
               top = rect.bottom + 12;
-              left = rect.left + rect.width / 2;
+              left = rect.left - 200 + rect.width / 2;
               break;
             case "top":
               top = rect.top - 12;

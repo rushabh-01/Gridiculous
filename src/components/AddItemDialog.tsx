@@ -16,10 +16,7 @@ interface AddItemDialogProps {
 const QUICK_APPS = [
   { name: "Google", url: "https://www.google.com/webhp?igu=1" },
   { name: "Wikipedia", url: "https://www.wikipedia.org" },
-  { name: "YouTube", url: "https://www.youtube.com/embed/" },
-  { name: "Bing", url: "https://www.bing.com" },
-  { name: "DuckDuckGo", url: "https://duckduckgo.com" },
-  { name: "OpenAI", url: "https://openai.com" },
+  { name: "Economist", url: "https://www.economist.com/" },
 ];
 
 const SUPPORTED_FILE_TYPES = [
